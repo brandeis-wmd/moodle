@@ -124,8 +124,8 @@ function LogoutNotification($SessionID){
 
     global $CFG, $SESSION, $DB;
 
-    // Delete session
-    if(preg_match('/file/i', $CFG->session_handler_class) === 1) {
+    // Delete session.
+    if (preg_match('/file/i', $CFG->session_handler_class) === 1) {
         // File session
         $dir = $CFG->session_file_save_path;
         if (is_dir($dir)) {
@@ -158,7 +158,7 @@ function LogoutNotification($SessionID){
                 closedir($dh);
             }
         }
-    } elseif(preg_match('/database/i', $CFG->session_handler_class) === 1) {
+    } else if(preg_match('/database/i', $CFG->session_handler_class) === 1) {
         // DB Session
         //TODO: this needs to be rewritten to use new session stuff
         if (!empty($CFG->sessiontimeout)) {
@@ -183,15 +183,13 @@ function LogoutNotification($SessionID){
                 }
             }
         }
-    } elseif(preg_match('/memcached/i', $CFG->session_handler_class) === 1) {
+    } else if(preg_match('/memcached/i', $CFG->session_handler_class) === 1) {
         throw new ErrorException('memcached shibboleth logout not implemented');
     } else {
         throw new ErrorException('cannot logout, unknown session class: ' . $CFG->session_handler_class);
     }
-    
 
     // If now SoapFault was thrown the function will return OK as the SP assumes
-
 }
 
 /*****************************************************************************/
