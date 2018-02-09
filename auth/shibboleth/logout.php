@@ -122,7 +122,7 @@ WSDL;
 
 function LogoutNotification($SessionID){
 
-    global $CFG, $SESSION, $DB;
+    global $CFG, $SESSION, $DB, $USER;
 
     // Delete session.
     if (preg_match('/file/i', $CFG->session_handler_class) === 1) {
@@ -158,7 +158,7 @@ function LogoutNotification($SessionID){
                 closedir($dh);
             }
         }
-    } else if(preg_match('/database/i', $CFG->session_handler_class) === 1) {
+    } else if (preg_match('/database/i', $CFG->session_handler_class) === 1) {
         // DB Session
         //TODO: this needs to be rewritten to use new session stuff
         if (!empty($CFG->sessiontimeout)) {
@@ -183,10 +183,10 @@ function LogoutNotification($SessionID){
                 }
             }
         }
-    } else if(preg_match('/memcached/i', $CFG->session_handler_class) === 1) {
-        throw new ErrorException('memcached shibboleth logout not implemented');
     } else {
-        throw new ErrorException('cannot logout, unknown session class: ' . $CFG->session_handler_class);
+        // best way to kill sessions
+        // if statements above left to manage change in increments
+        \core\session\manager::kill_user_sessions($USER->id);
     }
 
     // If now SoapFault was thrown the function will return OK as the SP assumes
