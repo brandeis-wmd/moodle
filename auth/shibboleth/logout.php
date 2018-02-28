@@ -122,41 +122,46 @@ WSDL;
 
 function LogoutNotification($SessionID){
 
-    global $CFG, $SESSION, $DB;
+    global $CFG, $SESSION, $DB, $USER;
 
     // Delete session of user using $SessionID
     if(empty($CFG->dbsessions)) {
 
-        // File session
-        $dir = $CFG->dataroot .'/sessions';
-        if (is_dir($dir)) {
-            if ($dh = opendir($dir)) {
-                // Read all session files
-                while (($file = readdir($dh)) !== false) {
-                    // Check if it is a file
-                    if (is_file($dir.'/'.$file)){
-                        $session_key = preg_replace('/sess_/', '', $file);
-
-                        // Read session file data
-                        $data = file($dir.'/'.$file);
-                        if (isset($data[0])){
-                            $user_session = unserializesession($data[0]);
-
-                            // Check if we have found session that shall be deleted
-                            if (isset($user_session['SESSION']) && isset($user_session['SESSION']->shibboleth_session_id)){
-
-                                // If there is a match, delete file
-                                if ($user_session['SESSION']->shibboleth_session_id == $SessionID){
-                                    // Delete session file
-                                    if (!unlink($dir.'/'.$file)){
-                                        return new SoapFault('LogoutError', 'Could not delete Moodle session file.');
+        // memcached, radius
+        if(!$CFG->session_file_save_path) {
+            \core\session\manager::kill_user_sessions($USER->id);
+        } else {
+            // File session
+            $dir = $CFG->sessions_file_save_path;
+            if (is_dir($dir)) {
+                if ($dh = opendir($dir)) {
+                    // Read all session files
+                    while (($file = readdir($dh)) !== false) {
+                        // Check if it is a file
+                        if (is_file($dir.'/'.$file)){
+                            $session_key = preg_replace('/sess_/', '', $file);
+    
+                            // Read session file data
+                            $data = file($dir.'/'.$file);
+                            if (isset($data[0])){
+                                $user_session = unserializesession($data[0]);
+    
+                                // Check if we have found session that shall be deleted
+                                if (isset($user_session['SESSION']) && isset($user_session['SESSION']->shibboleth_session_id)){
+    
+                                    // If there is a match, delete file
+                                    if ($user_session['SESSION']->shibboleth_session_id == $SessionID){
+                                        // Delete session file
+                                        if (!unlink($dir.'/'.$file)){
+                                            return new SoapFault('LogoutError', 'Could not delete Moodle session file.');
+                                        }
                                     }
                                 }
                             }
                         }
                     }
+                    closedir($dh);
                 }
-                closedir($dh);
             }
         }
     } else {
